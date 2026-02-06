@@ -1,0 +1,558 @@
+import numpy as np
+import sys
+
+class MatrixOperationsTool:
+    """A class to perform various matrix operations."""
+    
+    def __init__(self):
+        """Initialize the Matrix Operations Tool."""
+        self.matrix_storage = {}
+        self.matrix_count = 0
+    
+    def display_header(self):
+        """Display the application header."""
+        print("\n" + "="*70)
+        print(" " * 20 + "MATRIX OPERATIONS TOOL")
+        print("="*70)
+        print("Perform various matrix operations using NumPy")
+        print("-"*70)
+    
+    def input_matrix(self, matrix_name=None):
+        """
+        Get matrix input from user.
+        
+        Parameters:
+        -----------
+        matrix_name : str, optional
+            Name to assign to the matrix
+        
+        Returns:
+        --------
+        numpy.ndarray : The input matrix
+        """
+        print("\n" + "-"*70)
+        print("MATRIX INPUT")
+        print("-"*70)
+        
+        while True:
+            try:
+                rows = int(input("Enter number of rows: "))
+                cols = int(input("Enter number of columns: "))
+                
+                if rows <= 0 or cols <= 0:
+                    print("Error: Rows and columns must be positive integers!")
+                    continue
+                    
+                break
+            except ValueError:
+                print("Error: Please enter valid integers!")
+        
+        print(f"\nEnter matrix elements ({rows}x{cols}):")
+        print("(You can enter row by row, separated by spaces)")
+        
+        matrix = []
+        for i in range(rows):
+            while True:
+                try:
+                    row_input = input(f"Row {i+1}: ")
+                    row = [float(x) for x in row_input.split()]
+                    
+                    if len(row) != cols:
+                        print(f"Error: Please enter exactly {cols} elements!")
+                        continue
+                    
+                    matrix.append(row)
+                    break
+                except ValueError:
+                    print("Error: Please enter valid numbers separated by spaces!")
+        
+        result_matrix = np.array(matrix)
+        
+        # Store matrix if name provided
+        if matrix_name:
+            self.matrix_storage[matrix_name] = result_matrix
+        else:
+            self.matrix_count += 1
+            matrix_name = f"Matrix_{self.matrix_count}"
+            self.matrix_storage[matrix_name] = result_matrix
+        
+        print(f"\n✓ Matrix '{matrix_name}' created successfully!")
+        self.display_matrix(result_matrix, matrix_name)
+        
+        return result_matrix
+    
+    def display_matrix(self, matrix, name="Result"):
+        """
+        Display a matrix in a formatted way.
+        
+        Parameters:
+        -----------
+        matrix : numpy.ndarray
+            Matrix to display
+        name : str
+            Name of the matrix
+        """
+        print(f"\n{name}:")
+        print("-" * 50)
+        
+        # Format matrix for nice display
+        for row in matrix:
+            row_str = "  ".join([f"{val:8.2f}" for val in row])
+            print(f"  [ {row_str} ]")
+        
+        print(f"\nShape: {matrix.shape}")
+        print("-" * 50)
+    
+    def matrix_addition(self, matrix1, matrix2):
+        """
+        Add two matrices.
+        
+        Parameters:
+        -----------
+        matrix1, matrix2 : numpy.ndarray
+            Matrices to add
+        
+        Returns:
+        --------
+        numpy.ndarray : Sum of matrices
+        """
+        print("\n" + "="*70)
+        print("MATRIX ADDITION")
+        print("="*70)
+        
+        if matrix1.shape != matrix2.shape:
+            print("\n Error: Matrices must have the same dimensions for addition!")
+            print(f"   Matrix 1 shape: {matrix1.shape}")
+            print(f"   Matrix 2 shape: {matrix2.shape}")
+            return None
+        
+        result = matrix1 + matrix2
+        
+        print("\n✓ Addition performed successfully!")
+        self.display_matrix(matrix1, "Matrix 1")
+        print("\n     +")
+        self.display_matrix(matrix2, "Matrix 2")
+        print("\n     =")
+        self.display_matrix(result, "Result")
+        
+        return result
+    
+    def matrix_subtraction(self, matrix1, matrix2):
+        """
+        Subtract two matrices.
+        
+        Parameters:
+        -----------
+        matrix1, matrix2 : numpy.ndarray
+            Matrices to subtract
+        
+        Returns:
+        --------
+        numpy.ndarray : Difference of matrices
+        """
+        print("\n" + "="*70)
+        print("MATRIX SUBTRACTION")
+        print("="*70)
+        
+        if matrix1.shape != matrix2.shape:
+            print("\nError: Matrices must have the same dimensions for subtraction!")
+            print(f"   Matrix 1 shape: {matrix1.shape}")
+            print(f"   Matrix 2 shape: {matrix2.shape}")
+            return None
+        
+        result = matrix1 - matrix2
+        
+        print("\n✓ Subtraction performed successfully!")
+        self.display_matrix(matrix1, "Matrix 1")
+        print("\n     -")
+        self.display_matrix(matrix2, "Matrix 2")
+        print("\n     =")
+        self.display_matrix(result, "Result")
+        
+        return result
+    
+    def matrix_multiplication(self, matrix1, matrix2):
+        """
+        Multiply two matrices.
+        
+        Parameters:
+        -----------
+        matrix1, matrix2 : numpy.ndarray
+            Matrices to multiply
+        
+        Returns:
+        --------
+        numpy.ndarray : Product of matrices
+        """
+        print("\n" + "="*70)
+        print("MATRIX MULTIPLICATION")
+        print("="*70)
+        
+        if matrix1.shape[1] != matrix2.shape[0]:
+            print("\n Error: Number of columns in Matrix 1 must equal number of rows in Matrix 2!")
+            print(f"   Matrix 1 shape: {matrix1.shape}")
+            print(f"   Matrix 2 shape: {matrix2.shape}")
+            return None
+        
+        result = np.dot(matrix1, matrix2)
+        
+        print("\n✓ Multiplication performed successfully!")
+        self.display_matrix(matrix1, "Matrix 1")
+        print("\n     ×")
+        self.display_matrix(matrix2, "Matrix 2")
+        print("\n     =")
+        self.display_matrix(result, "Result")
+        
+        return result
+    
+    def matrix_transpose(self, matrix):
+        """
+        Calculate the transpose of a matrix.
+        
+        Parameters:
+        -----------
+        matrix : numpy.ndarray
+            Matrix to transpose
+        
+        Returns:
+        --------
+        numpy.ndarray : Transposed matrix
+        """
+        print("\n" + "="*70)
+        print("MATRIX TRANSPOSE")
+        print("="*70)
+        
+        result = matrix.T
+        
+        print("\n✓ Transpose calculated successfully!")
+        self.display_matrix(matrix, "Original Matrix")
+        print("\n     ⟹ Transpose")
+        self.display_matrix(result, "Transposed Matrix")
+        
+        return result
+    
+    def matrix_determinant(self, matrix):
+        """
+        Calculate the determinant of a matrix.
+        
+        Parameters:
+        -----------
+        matrix : numpy.ndarray
+            Matrix to calculate determinant
+        
+        Returns:
+        --------
+        float : Determinant value
+        """
+        print("\n" + "="*70)
+        print("MATRIX DETERMINANT")
+        print("="*70)
+        
+        if matrix.shape[0] != matrix.shape[1]:
+            print("\n Error: Determinant can only be calculated for square matrices!")
+            print(f"   Matrix shape: {matrix.shape}")
+            return None
+        
+        det = np.linalg.det(matrix)
+        
+        print("\n✓ Determinant calculated successfully!")
+        self.display_matrix(matrix, "Matrix")
+        print(f"\nDeterminant = {det:.4f}")
+        print("-" * 50)
+        
+        return det
+    
+    def matrix_inverse(self, matrix):
+        """
+        Calculate the inverse of a matrix.
+        
+        Parameters:
+        -----------
+        matrix : numpy.ndarray
+            Matrix to invert
+        
+        Returns:
+        --------
+        numpy.ndarray : Inverse matrix
+        """
+        print("\n" + "="*70)
+        print("MATRIX INVERSE")
+        print("="*70)
+        
+        if matrix.shape[0] != matrix.shape[1]:
+            print("\n Error: Inverse can only be calculated for square matrices!")
+            print(f"   Matrix shape: {matrix.shape}")
+            return None
+        
+        try:
+            result = np.linalg.inv(matrix)
+            
+            print("\n✓ Inverse calculated successfully!")
+            self.display_matrix(matrix, "Original Matrix")
+            print("\n     ⟹ Inverse")
+            self.display_matrix(result, "Inverse Matrix")
+            
+            # Verify: A * A^-1 = I
+            identity = np.dot(matrix, result)
+            print("\n     Verification (A × A⁻¹ should equal I):")
+            self.display_matrix(identity, "Result")
+            
+            return result
+            
+        except np.linalg.LinAlgError:
+            print("\n Error: Matrix is singular (determinant = 0) and cannot be inverted!")
+            return None
+    
+    def scalar_multiplication(self, matrix, scalar):
+        """
+        Multiply matrix by a scalar.
+        
+        Parameters:
+        -----------
+        matrix : numpy.ndarray
+            Matrix to multiply
+        scalar : float
+            Scalar value
+        
+        Returns:
+        --------
+        numpy.ndarray : Scaled matrix
+        """
+        print("\n" + "="*70)
+        print("SCALAR MULTIPLICATION")
+        print("="*70)
+        
+        result = scalar * matrix
+        
+        print(f"\n✓ Multiplication by scalar {scalar} performed successfully!")
+        self.display_matrix(matrix, "Original Matrix")
+        print(f"\n     × {scalar}")
+        self.display_matrix(result, "Result")
+        
+        return result
+    
+    def display_menu(self):
+        """Display the main menu."""
+        print("\n" + "="*70)
+        print("OPERATIONS MENU")
+        print("="*70)
+        print("1. Matrix Addition")
+        print("2. Matrix Subtraction")
+        print("3. Matrix Multiplication")
+        print("4. Matrix Transpose")
+        print("5. Matrix Determinant")
+        print("6. Matrix Inverse")
+        print("7. Scalar Multiplication")
+        print("8. View Stored Matrices")
+        print("9. Create Sample Matrices (Demo)")
+        print("0. Exit")
+        print("-"*70)
+    
+    def view_stored_matrices(self):
+        """Display all stored matrices."""
+        print("\n" + "="*70)
+        print("STORED MATRICES")
+        print("="*70)
+        
+        if not self.matrix_storage:
+            print("\nNo matrices stored yet!")
+            return
+        
+        for name, matrix in self.matrix_storage.items():
+            self.display_matrix(matrix, name)
+    
+    def create_sample_matrices(self):
+        """Create sample matrices for demonstration."""
+        print("\n" + "="*70)
+        print("CREATING SAMPLE MATRICES")
+        print("="*70)
+        
+        # Sample Matrix 1: 3x3
+        matrix1 = np.array([
+            [4, 7, 2],
+            [1, 5, 3],
+            [8, 2, 6]
+        ])
+        self.matrix_storage["Sample_A"] = matrix1
+        
+        # Sample Matrix 2: 3x3
+        matrix2 = np.array([
+            [2, 1, 5],
+            [3, 4, 2],
+            [1, 6, 3]
+        ])
+        self.matrix_storage["Sample_B"] = matrix2
+        
+        # Sample Matrix 3: 2x3
+        matrix3 = np.array([
+            [1, 2, 3],
+            [4, 5, 6]
+        ])
+        self.matrix_storage["Sample_C"] = matrix3
+        
+        print("\n✓ Sample matrices created successfully!")
+        self.view_stored_matrices()
+    
+    def run(self):
+        """Run the interactive matrix operations tool."""
+        self.display_header()
+        
+        print("\nWelcome to the Matrix Operations Tool!")
+        print("You can perform various operations on matrices using NumPy.")
+        
+        while True:
+            self.display_menu()
+            
+            try:
+                choice = input("\nEnter your choice (0-9): ").strip()
+                
+                if choice == '0':
+                    print("\n" + "="*70)
+                    print("Thank you for using the Matrix Operations Tool!")
+                    print("="*70)
+                    break
+                
+                elif choice == '1':
+                    # Addition
+                    print("\nEnter first matrix:")
+                    matrix1 = self.input_matrix("Matrix_A")
+                    print("\nEnter second matrix:")
+                    matrix2 = self.input_matrix("Matrix_B")
+                    self.matrix_addition(matrix1, matrix2)
+                
+                elif choice == '2':
+                    # Subtraction
+                    print("\nEnter first matrix:")
+                    matrix1 = self.input_matrix("Matrix_A")
+                    print("\nEnter second matrix:")
+                    matrix2 = self.input_matrix("Matrix_B")
+                    self.matrix_subtraction(matrix1, matrix2)
+                
+                elif choice == '3':
+                    # Multiplication
+                    print("\nEnter first matrix:")
+                    matrix1 = self.input_matrix("Matrix_A")
+                    print("\nEnter second matrix:")
+                    matrix2 = self.input_matrix("Matrix_B")
+                    self.matrix_multiplication(matrix1, matrix2)
+                
+                elif choice == '4':
+                    # Transpose
+                    print("\nEnter matrix:")
+                    matrix = self.input_matrix("Matrix_A")
+                    self.matrix_transpose(matrix)
+                
+                elif choice == '5':
+                    # Determinant
+                    print("\nEnter matrix:")
+                    matrix = self.input_matrix("Matrix_A")
+                    self.matrix_determinant(matrix)
+                
+                elif choice == '6':
+                    # Inverse
+                    print("\nEnter matrix:")
+                    matrix = self.input_matrix("Matrix_A")
+                    self.matrix_inverse(matrix)
+                
+                elif choice == '7':
+                    # Scalar multiplication
+                    print("\nEnter matrix:")
+                    matrix = self.input_matrix("Matrix_A")
+                    scalar = float(input("Enter scalar value: "))
+                    self.scalar_multiplication(matrix, scalar)
+                
+                elif choice == '8':
+                    # View stored matrices
+                    self.view_stored_matrices()
+                
+                elif choice == '9':
+                    # Create sample matrices
+                    self.create_sample_matrices()
+                
+                else:
+                    print("\n Invalid choice! Please enter a number between 0-9.")
+                
+                # Wait for user to continue
+                input("\nPress Enter to continue...")
+                
+            except KeyboardInterrupt:
+                print("\n\nOperation cancelled by user.")
+                break
+            except Exception as e:
+                print(f"\n An error occurred: {str(e)}")
+                input("\nPress Enter to continue...")
+
+
+# Example usage and demonstrations
+def demonstrate_operations():
+    """Demonstrate various matrix operations."""
+    print("\n" + "="*70)
+    print(" MATRIX OPERATIONS DEMONSTRATION")
+    print("="*70)
+    
+    tool = MatrixOperationsTool()
+    
+    # Create sample matrices
+    print("\n1. Creating Sample Matrices")
+    A = np.array([[1, 2, 3], [4, 5, 6], [7, 8, 9]])
+    B = np.array([[9, 8, 7], [6, 5, 4], [3, 2, 1]])
+    C = np.array([[2, 1], [3, 4], [5, 6]])
+    
+    tool.display_matrix(A, "Matrix A (3×3)")
+    tool.display_matrix(B, "Matrix B (3×3)")
+    tool.display_matrix(C, "Matrix C (3×2)")
+    
+    # Demonstrate operations
+    input("\nPress Enter to see Addition...")
+    tool.matrix_addition(A, B)
+    
+    input("\nPress Enter to see Subtraction...")
+    tool.matrix_subtraction(A, B)
+    
+    input("\nPress Enter to see Multiplication...")
+    tool.matrix_multiplication(A, C)
+    
+    input("\nPress Enter to see Transpose...")
+    tool.matrix_transpose(A)
+    
+    input("\nPress Enter to see Determinant...")
+    D = np.array([[4, 7], [2, 6]])
+    tool.display_matrix(D, "Matrix D (2×2)")
+    tool.matrix_determinant(D)
+    
+    input("\nPress Enter to see Inverse...")
+    tool.matrix_inverse(D)
+    
+    input("\nPress Enter to see Scalar Multiplication...")
+    tool.scalar_multiplication(A, 3)
+    
+    print("\n" + "="*70)
+    print("Demonstration Complete!")
+    print("="*70)
+
+
+if __name__ == "__main__":
+    print("\n" + "="*70)
+    print("MATRIX OPERATIONS TOOL - NumPy Edition")
+    print("="*70)
+    
+    print("\nChoose mode:")
+    print("1. Interactive Mode (Manual input)")
+    print("2. Demonstration Mode (Automated examples)")
+    
+    try:
+        mode = input("\nEnter your choice (1 or 2): ").strip()
+        
+        if mode == '1':
+            tool = MatrixOperationsTool()
+            tool.run()
+        elif mode == '2':
+            demonstrate_operations()
+        else:
+            print("\nInvalid choice. Running demonstration mode...")
+            demonstrate_operations()
+            
+    except KeyboardInterrupt:
+        print("\n\nProgram terminated by user.")
+    except Exception as e:
+        print(f"\n Error: {str(e)}")
