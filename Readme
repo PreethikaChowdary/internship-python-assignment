@@ -1,5 +1,5 @@
 This repository contains three Python projects developed for an internship assignment. Each project demonstrates different aspects of data analysis, machine learning, and numerical computing using popular Python libraries.
-📋 Table of Contents
+ Table of Contents
 
 Projects Overview
 Installation
@@ -15,7 +15,7 @@ Requirements
 Author
 
 
-🚀 Projects Overview
+ Projects Overview
 1. Data Analysis and Visualization Tool
 File: data_analysis_visualization.py
 A comprehensive tool for analyzing CSV datasets using Pandas and creating various visualizations using Matplotlib. The tool performs statistical analysis, calculates averages, and generates bar charts, scatter plots, and correlation heatmaps.
@@ -45,7 +45,7 @@ bash   pip install -r requirements.txt
 Or install packages individually:
 bash   pip install pandas numpy matplotlib seaborn scikit-learn
 
-📊 Project Details
+ Project Details
 1. Data Analysis and Visualization Tool
 Features:
 
