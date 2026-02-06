@@ -1,0 +1,402 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+from sklearn.preprocessing import LabelEncoder, StandardScaler
+from sklearn.metrics import mean_squared_error, r2_score, mean_absolute_error
+import warnings
+warnings.filterwarnings('ignore')
+
+class HousePricePredictor:
+    """A class to build and train a house price prediction model."""
+    
+    def __init__(self):
+        """Initialize the predictor with empty model and data."""
+        self.model = None
+        self.scaler = StandardScaler()
+        self.label_encoders = {}
+        self.feature_names = []
+        
+    def load_data(self, filepath):
+        """
+        Load the house price dataset from CSV.
+        
+        Parameters:
+        -----------
+        filepath : str
+            Path to the CSV file
+        """
+        print("Loading dataset...")
+        self.df = pd.read_csv(filepath)
+        print(f"✓ Dataset loaded: {self.df.shape[0]} records, {self.df.shape[1]} features")
+        print("\nFirst few rows:")
+        print(self.df.head())
+        return self.df
+    
+    def explore_data(self):
+        """Perform exploratory data analysis."""
+        print("\n" + "="*70)
+        print("EXPLORATORY DATA ANALYSIS")
+        print("="*70)
+        
+        print("\nDataset Info:")
+        print(self.df.info())
+        
+        print("\nStatistical Summary:")
+        print(self.df.describe())
+        
+        print("\nMissing Values:")
+        missing = self.df.isnull().sum()
+        if missing.sum() > 0:
+            print(missing[missing > 0])
+        else:
+            print("No missing values found!")
+        
+        # Visualize price distribution
+        if 'price' in self.df.columns or 'Price' in self.df.columns:
+            price_col = 'price' if 'price' in self.df.columns else 'Price'
+            
+            plt.figure(figsize=(12, 4))
+            
+            plt.subplot(1, 2, 1)
+            plt.hist(self.df[price_col], bins=50, color='skyblue', edgecolor='black')
+            plt.xlabel('Price')
+            plt.ylabel('Frequency')
+            plt.title('House Price Distribution')
+            
+            plt.subplot(1, 2, 2)
+            plt.boxplot(self.df[price_col])
+            plt.ylabel('Price')
+            plt.title('Price Box Plot')
+            
+            plt.tight_layout()
+            plt.savefig('price_distribution.png', dpi=300, bbox_inches='tight')
+            plt.show()
+            print("\n📊 Price distribution plot saved as 'price_distribution.png'")
+    
+    def preprocess_data(self, target_column='price'):
+        """
+        Preprocess the data: handle missing values, encode categorical variables.
+        
+        Parameters:
+        -----------
+        target_column : str
+            Name of the target variable (price column)
+        """
+        print("\n" + "="*70)
+        print("DATA PREPROCESSING")
+        print("="*70)
+        
+        # Make a copy to avoid modifying original
+        df_processed = self.df.copy()
+        
+        # Handle missing values
+        print("\n1. Handling missing values...")
+        for col in df_processed.columns:
+            if df_processed[col].isnull().sum() > 0:
+                if df_processed[col].dtype in ['int64', 'float64']:
+                    df_processed[col].fillna(df_processed[col].median(), inplace=True)
+                    print(f"   ✓ Filled {col} with median")
+                else:
+                    df_processed[col].fillna(df_processed[col].mode()[0], inplace=True)
+                    print(f"   ✓ Filled {col} with mode")
+        
+        # Separate features and target
+        if target_column not in df_processed.columns:
+            # Try to find a price column
+            price_cols = [col for col in df_processed.columns if 'price' in col.lower()]
+            if price_cols:
+                target_column = price_cols[0]
+                print(f"\n   Using '{target_column}' as target variable")
+            else:
+                raise ValueError(f"Target column '{target_column}' not found!")
+        
+        X = df_processed.drop(target_column, axis=1)
+        y = df_processed[target_column]
+        
+        # Encode categorical variables
+        print("\n2. Encoding categorical variables...")
+        categorical_cols = X.select_dtypes(include=['object']).columns
+        
+        for col in categorical_cols:
+            if X[col].nunique() < 50:  # Only encode if reasonable number of categories
+                le = LabelEncoder()
+                X[col] = le.fit_transform(X[col].astype(str))
+                self.label_encoders[col] = le
+                print(f"   ✓ Encoded {col}")
+            else:
+                print(f"   ⚠ Dropped {col} (too many categories)")
+                X = X.drop(col, axis=1)
+        
+        # Store feature names
+        self.feature_names = X.columns.tolist()
+        
+        print(f"\n3. Final feature set: {len(self.feature_names)} features")
+        print(f"   Features: {', '.join(self.feature_names)}")
+        
+        return X, y
+    
+    def train_model(self, X, y, test_size=0.2, random_state=42):
+        """
+        Train the linear regression model.
+        
+        Parameters:
+        -----------
+        X : DataFrame
+            Feature matrix
+        y : Series
+            Target variable
+        test_size : float
+            Proportion of dataset for testing
+        random_state : int
+            Random seed for reproducibility
+        """
+        print("\n" + "="*70)
+        print("MODEL TRAINING")
+        print("="*70)
+        
+        # Split data
+        print(f"\n1. Splitting data: {int((1-test_size)*100)}% train, {int(test_size*100)}% test")
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(
+            X, y, test_size=test_size, random_state=random_state
+        )
+        print(f"   Training set: {len(self.X_train)} samples")
+        print(f"   Test set: {len(self.X_test)} samples")
+        
+        # Scale features
+        print("\n2. Scaling features...")
+        self.X_train_scaled = self.scaler.fit_transform(self.X_train)
+        self.X_test_scaled = self.scaler.transform(self.X_test)
+        print("   ✓ Features scaled using StandardScaler")
+        
+        # Train model
+        print("\n3. Training Linear Regression model...")
+        self.model = LinearRegression()
+        self.model.fit(self.X_train_scaled, self.y_train)
+        print("   ✓ Model trained successfully!")
+        
+        # Display coefficients
+        print("\n4. Model Coefficients:")
+        coefficients = pd.DataFrame({
+            'Feature': self.feature_names,
+            'Coefficient': self.model.coef_
+        }).sort_values('Coefficient', key=abs, ascending=False)
+        print(coefficients.to_string(index=False))
+        print(f"\n   Intercept: {self.model.intercept_:.2f}")
+    
+    def evaluate_model(self):
+        """Evaluate the model performance."""
+        print("\n" + "="*70)
+        print("MODEL EVALUATION")
+        print("="*70)
+        
+        # Make predictions
+        y_train_pred = self.model.predict(self.X_train_scaled)
+        y_test_pred = self.model.predict(self.X_test_scaled)
+        
+        # Calculate metrics
+        train_r2 = r2_score(self.y_train, y_train_pred)
+        test_r2 = r2_score(self.y_test, y_test_pred)
+        train_rmse = np.sqrt(mean_squared_error(self.y_train, y_train_pred))
+        test_rmse = np.sqrt(mean_squared_error(self.y_test, y_test_pred))
+        train_mae = mean_absolute_error(self.y_train, y_train_pred)
+        test_mae = mean_absolute_error(self.y_test, y_test_pred)
+        
+        print("\nPerformance Metrics:")
+        print("-" * 50)
+        print(f"{'Metric':<20} {'Training':<15} {'Testing':<15}")
+        print("-" * 50)
+        print(f"{'R² Score':<20} {train_r2:<15.4f} {test_r2:<15.4f}")
+        print(f"{'RMSE':<20} {train_rmse:<15.2f} {test_rmse:<15.2f}")
+        print(f"{'MAE':<20} {train_mae:<15.2f} {test_mae:<15.2f}")
+        print("-" * 50)
+        
+        # Interpretation
+        print("\nModel Interpretation:")
+        if test_r2 > 0.8:
+            print("   ✓ Excellent model performance!")
+        elif test_r2 > 0.6:
+            print("   ✓ Good model performance")
+        elif test_r2 > 0.4:
+            print("   ⚠ Moderate model performance - consider feature engineering")
+        else:
+            print("   ⚠ Poor model performance - more features or different model needed")
+        
+        # Visualize predictions
+        self.visualize_predictions(y_test_pred)
+        
+        return test_r2, test_rmse, test_mae
+    
+    def visualize_predictions(self, y_pred):
+        """Create visualizations of model predictions."""
+        plt.figure(figsize=(15, 5))
+        
+        # Actual vs Predicted
+        plt.subplot(1, 3, 1)
+        plt.scatter(self.y_test, y_pred, alpha=0.6, color='coral', edgecolors='darkred')
+        plt.plot([self.y_test.min(), self.y_test.max()], 
+                [self.y_test.min(), self.y_test.max()], 
+                'r--', lw=2, label='Perfect Prediction')
+        plt.xlabel('Actual Price')
+        plt.ylabel('Predicted Price')
+        plt.title('Actual vs Predicted Prices')
+        plt.legend()
+        plt.grid(True, alpha=0.3)
+        
+        # Residuals
+        plt.subplot(1, 3, 2)
+        residuals = self.y_test - y_pred
+        plt.scatter(y_pred, residuals, alpha=0.6, color='skyblue', edgecolors='navy')
+        plt.axhline(y=0, color='r', linestyle='--', lw=2)
+        plt.xlabel('Predicted Price')
+        plt.ylabel('Residuals')
+        plt.title('Residual Plot')
+        plt.grid(True, alpha=0.3)
+        
+        # Residual distribution
+        plt.subplot(1, 3, 3)
+        plt.hist(residuals, bins=30, color='lightgreen', edgecolor='darkgreen')
+        plt.xlabel('Residuals')
+        plt.ylabel('Frequency')
+        plt.title('Residual Distribution')
+        plt.grid(True, alpha=0.3)
+        
+        plt.tight_layout()
+        plt.savefig('model_predictions.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        print("\n📈 Prediction visualizations saved as 'model_predictions.png'")
+    
+    def predict_price(self, features_dict):
+        """
+        Make a prediction for new house features.
+        
+        Parameters:
+        -----------
+        features_dict : dict
+            Dictionary with feature names and values
+        """
+        # Create DataFrame from input
+        input_df = pd.DataFrame([features_dict])
+        
+        # Encode categorical variables
+        for col in self.label_encoders:
+            if col in input_df.columns:
+                input_df[col] = self.label_encoders[col].transform(input_df[col].astype(str))
+        
+        # Ensure all features are present
+        for feature in self.feature_names:
+            if feature not in input_df.columns:
+                input_df[feature] = 0
+        
+        # Select and order features
+        input_df = input_df[self.feature_names]
+        
+        # Scale and predict
+        input_scaled = self.scaler.transform(input_df)
+        prediction = self.model.predict(input_scaled)[0]
+        
+        return prediction
+
+
+# Example usage
+if __name__ == "__main__":
+    print("="*70)
+    print(" HOUSE PRICE PREDICTION MODEL")
+    print("="*70)
+    
+    print("\nINSTRUCTIONS:")
+    print("1. Download a house price dataset from Kaggle")
+    print("   Recommended: 'House Prices - Advanced Regression Techniques'")
+    print("   Or search for: 'house price prediction dataset'")
+    print("2. Place the CSV file in the same directory")
+    print("3. Update the filepath variable below")
+    print("\nNote: Creating sample dataset for demonstration...")
+    
+    # Create sample dataset (replace with real Kaggle data)
+    print("\n" + "-"*70)
+    print("Creating sample house price dataset...")
+    print("-"*70)
+    
+    np.random.seed(42)
+    n_samples = 500
+    
+    sample_data = {
+        'bedrooms': np.random.randint(1, 6, n_samples),
+        'bathrooms': np.random.randint(1, 4, n_samples),
+        'sqft_living': np.random.randint(500, 5000, n_samples),
+        'sqft_lot': np.random.randint(1000, 10000, n_samples),
+        'floors': np.random.choice([1, 1.5, 2, 2.5, 3], n_samples),
+        'location': np.random.choice(['Urban', 'Suburban', 'Rural'], n_samples),
+        'condition': np.random.randint(1, 6, n_samples),
+        'yr_built': np.random.randint(1950, 2024, n_samples),
+    }
+    
+    # Create price based on features (with some noise)
+    sample_data['price'] = (
+        50000 + 
+        sample_data['bedrooms'] * 30000 +
+        sample_data['bathrooms'] * 20000 +
+        sample_data['sqft_living'] * 150 +
+        sample_data['floors'] * 15000 +
+        (sample_data['location'] == 'Urban').astype(int) * 100000 +
+        sample_data['condition'] * 10000 +
+        np.random.normal(0, 50000, n_samples)
+    )
+    
+    sample_df = pd.DataFrame(sample_data)
+    sample_df.to_csv('house_prices.csv', index=False)
+    print("✓ Sample dataset created: house_prices.csv")
+    
+    # Train and evaluate model
+    try:
+        # Initialize predictor
+        predictor = HousePricePredictor()
+        
+        # Load data
+        data = predictor.load_data('house_prices.csv')
+        
+        # Explore data
+        predictor.explore_data()
+        
+        # Preprocess
+        X, y = predictor.preprocess_data(target_column='price')
+        
+        # Train model
+        predictor.train_model(X, y)
+        
+        # Evaluate
+        predictor.evaluate_model()
+        
+        # Make sample prediction
+        print("\n" + "="*70)
+        print("SAMPLE PREDICTION")
+        print("="*70)
+        
+        sample_house = {
+            'bedrooms': 3,
+            'bathrooms': 2,
+            'sqft_living': 2000,
+            'sqft_lot': 5000,
+            'floors': 2,
+            'location': 'Urban',
+            'condition': 4,
+            'yr_built': 2010
+        }
+        
+        print("\nHouse Features:")
+        for key, value in sample_house.items():
+            print(f"   {key}: {value}")
+        
+        predicted_price = predictor.predict_price(sample_house)
+        print(f"\n🏠 Predicted Price: ${predicted_price:,.2f}")
+        
+        print("\n" + "="*70)
+        print("✓ Model Training Complete!")
+        print("="*70)
+        
+    except Exception as e:
+        print(f"\n❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
