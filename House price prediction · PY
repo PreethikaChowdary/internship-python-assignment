@@ -74,7 +74,7 @@ class HousePricePredictor:
             plt.tight_layout()
             plt.savefig('price_distribution.png', dpi=300, bbox_inches='tight')
             plt.show()
-            print("\n📊 Price distribution plot saved as 'price_distribution.png'")
+            print("\n Price distribution plot saved as 'price_distribution.png'")
     
     def preprocess_data(self, target_column='price'):
         """
@@ -98,10 +98,10 @@ class HousePricePredictor:
             if df_processed[col].isnull().sum() > 0:
                 if df_processed[col].dtype in ['int64', 'float64']:
                     df_processed[col].fillna(df_processed[col].median(), inplace=True)
-                    print(f"   ✓ Filled {col} with median")
+                    print(f"   Filled {col} with median")
                 else:
                     df_processed[col].fillna(df_processed[col].mode()[0], inplace=True)
-                    print(f"   ✓ Filled {col} with mode")
+                    print(f"   Filled {col} with mode")
         
         # Separate features and target
         if target_column not in df_processed.columns:
@@ -125,9 +125,9 @@ class HousePricePredictor:
                 le = LabelEncoder()
                 X[col] = le.fit_transform(X[col].astype(str))
                 self.label_encoders[col] = le
-                print(f"   ✓ Encoded {col}")
+                print(f"    Encoded {col}")
             else:
-                print(f"   ⚠ Dropped {col} (too many categories)")
+                print(f"    Dropped {col} (too many categories)")
                 X = X.drop(col, axis=1)
         
         # Store feature names
@@ -169,13 +169,13 @@ class HousePricePredictor:
         print("\n2. Scaling features...")
         self.X_train_scaled = self.scaler.fit_transform(self.X_train)
         self.X_test_scaled = self.scaler.transform(self.X_test)
-        print("   ✓ Features scaled using StandardScaler")
+        print("    Features scaled using StandardScaler")
         
         # Train model
         print("\n3. Training Linear Regression model...")
         self.model = LinearRegression()
         self.model.fit(self.X_train_scaled, self.y_train)
-        print("   ✓ Model trained successfully!")
+        print("    Model trained successfully!")
         
         # Display coefficients
         print("\n4. Model Coefficients:")
@@ -216,13 +216,13 @@ class HousePricePredictor:
         # Interpretation
         print("\nModel Interpretation:")
         if test_r2 > 0.8:
-            print("   ✓ Excellent model performance!")
+            print("    Excellent model performance!")
         elif test_r2 > 0.6:
-            print("   ✓ Good model performance")
+            print("    Good model performance")
         elif test_r2 > 0.4:
-            print("   ⚠ Moderate model performance - consider feature engineering")
+            print("    Moderate model performance - consider feature engineering")
         else:
-            print("   ⚠ Poor model performance - more features or different model needed")
+            print("    Poor model performance - more features or different model needed")
         
         # Visualize predictions
         self.visualize_predictions(y_test_pred)
@@ -266,7 +266,7 @@ class HousePricePredictor:
         plt.tight_layout()
         plt.savefig('model_predictions.png', dpi=300, bbox_inches='tight')
         plt.show()
-        print("\n📈 Prediction visualizations saved as 'model_predictions.png'")
+        print("\n Prediction visualizations saved as 'model_predictions.png'")
     
     def predict_price(self, features_dict):
         """
@@ -390,13 +390,13 @@ if __name__ == "__main__":
             print(f"   {key}: {value}")
         
         predicted_price = predictor.predict_price(sample_house)
-        print(f"\n🏠 Predicted Price: ${predicted_price:,.2f}")
+        print(f"\n Predicted Price: ${predicted_price:,.2f}")
         
         print("\n" + "="*70)
-        print("✓ Model Training Complete!")
+        print(" Model Training Complete!")
         print("="*70)
         
     except Exception as e:
-        print(f"\n❌ Error: {str(e)}")
+        print(f"\n Error: {str(e)}")
         import traceback
         traceback.print_exc()
