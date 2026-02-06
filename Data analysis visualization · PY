@@ -1,0 +1,265 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+
+# Set style for better-looking plots
+plt.style.use('seaborn-v0_8-darkgrid')
+sns.set_palette("husl")
+
+class DataAnalyzer:
+    """A class to perform data analysis and visualization on CSV data."""
+    
+    def __init__(self, csv_file):
+        """
+        Initialize the DataAnalyzer with a CSV file.
+        
+        Parameters:
+        -----------
+        csv_file : str
+            Path to the CSV file to analyze
+        """
+        self.df = pd.read_csv(csv_file)
+        print("Dataset loaded successfully!")
+        print(f"Shape: {self.df.shape}")
+        print("\nFirst few rows:")
+        print(self.df.head())
+    
+    def basic_statistics(self):
+        """Display basic statistical information about the dataset."""
+        print("\n" + "="*50)
+        print("BASIC STATISTICS")
+        print("="*50)
+        print("\nDataset Info:")
+        print(self.df.info())
+        
+        print("\nStatistical Summary:")
+        print(self.df.describe())
+        
+        print("\nMissing Values:")
+        print(self.df.isnull().sum())
+    
+    def calculate_column_average(self, column_name):
+        """
+        Calculate and display the average of a selected column.
+        
+        Parameters:
+        -----------
+        column_name : str
+            Name of the column to calculate average
+        """
+        if column_name in self.df.columns:
+            avg = self.df[column_name].mean()
+            median = self.df[column_name].median()
+            std = self.df[column_name].std()
+            
+            print(f"\n{column_name} Statistics:")
+            print(f"Average (Mean): {avg:.2f}")
+            print(f"Median: {median:.2f}")
+            print(f"Standard Deviation: {std:.2f}")
+            print(f"Min: {self.df[column_name].min():.2f}")
+            print(f"Max: {self.df[column_name].max():.2f}")
+            
+            return avg
+        else:
+            print(f"Column '{column_name}' not found in dataset!")
+            return None
+    
+    def create_bar_chart(self, column_name, title="Bar Chart"):
+        """
+        Create a bar chart for categorical data or top values.
+        
+        Parameters:
+        -----------
+        column_name : str
+            Name of the column to visualize
+        title : str
+            Title for the chart
+        """
+        plt.figure(figsize=(10, 6))
+        
+        # If column has many unique values, show top 10
+        value_counts = self.df[column_name].value_counts().head(10)
+        
+        plt.bar(range(len(value_counts)), value_counts.values, color='skyblue', edgecolor='navy')
+        plt.xlabel(column_name, fontsize=12)
+        plt.ylabel('Frequency', fontsize=12)
+        plt.title(title, fontsize=14, fontweight='bold')
+        plt.xticks(range(len(value_counts)), value_counts.index, rotation=45, ha='right')
+        plt.tight_layout()
+        plt.savefig(f'bar_chart_{column_name}.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"\n📊 Bar chart saved as 'bar_chart_{column_name}.png'")
+    
+    def create_scatter_plot(self, x_column, y_column, title="Scatter Plot"):
+        """
+        Create a scatter plot to show relationship between two variables.
+        
+        Parameters:
+        -----------
+        x_column : str
+            Column name for x-axis
+        y_column : str
+            Column name for y-axis
+        title : str
+            Title for the plot
+        """
+        plt.figure(figsize=(10, 6))
+        
+        plt.scatter(self.df[x_column], self.df[y_column], alpha=0.6, 
+                   c='coral', edgecolors='darkred', s=50)
+        plt.xlabel(x_column, fontsize=12)
+        plt.ylabel(y_column, fontsize=12)
+        plt.title(title, fontsize=14, fontweight='bold')
+        plt.grid(True, alpha=0.3)
+        
+        # Add trend line
+        z = np.polyfit(self.df[x_column].dropna(), self.df[y_column].dropna(), 1)
+        p = np.poly1d(z)
+        plt.plot(self.df[x_column], p(self.df[x_column]), "r--", alpha=0.8, linewidth=2, label='Trend Line')
+        plt.legend()
+        
+        plt.tight_layout()
+        plt.savefig(f'scatter_plot_{x_column}_vs_{y_column}.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print(f"\n📈 Scatter plot saved as 'scatter_plot_{x_column}_vs_{y_column}.png'")
+        
+        # Calculate correlation
+        correlation = self.df[x_column].corr(self.df[y_column])
+        print(f"Correlation between {x_column} and {y_column}: {correlation:.3f}")
+    
+    def create_heatmap(self, title="Correlation Heatmap"):
+        """
+        Create a heatmap showing correlations between numerical columns.
+        
+        Parameters:
+        -----------
+        title : str
+            Title for the heatmap
+        """
+        # Select only numerical columns
+        numerical_cols = self.df.select_dtypes(include=[np.number])
+        
+        plt.figure(figsize=(12, 8))
+        
+        # Calculate correlation matrix
+        correlation_matrix = numerical_cols.corr()
+        
+        # Create heatmap
+        sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', center=0,
+                   fmt='.2f', square=True, linewidths=1, cbar_kws={"shrink": 0.8})
+        plt.title(title, fontsize=14, fontweight='bold', pad=20)
+        plt.tight_layout()
+        plt.savefig('correlation_heatmap.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        
+        print("\n🔥 Correlation heatmap saved as 'correlation_heatmap.png'")
+        
+        # Print strongest correlations
+        print("\nStrongest Correlations:")
+        corr_pairs = correlation_matrix.unstack()
+        corr_pairs = corr_pairs[corr_pairs < 1]  # Remove self-correlations
+        sorted_pairs = corr_pairs.abs().sort_values(ascending=False)
+        print(sorted_pairs.head(5))
+    
+    def generate_insights(self):
+        """Generate and display insights from the data analysis."""
+        print("\n" + "="*50)
+        print("KEY INSIGHTS AND OBSERVATIONS")
+        print("="*50)
+        
+        numerical_cols = self.df.select_dtypes(include=[np.number]).columns
+        
+        print(f"\n1. Dataset contains {len(self.df)} records and {len(self.df.columns)} features")
+        print(f"2. Numerical features: {', '.join(numerical_cols)}")
+        
+        # Missing data insights
+        missing_data = self.df.isnull().sum()
+        if missing_data.sum() > 0:
+            print(f"\n3. Missing Data Alert:")
+            for col, count in missing_data[missing_data > 0].items():
+                print(f"   - {col}: {count} missing values ({count/len(self.df)*100:.1f}%)")
+        else:
+            print("\n3. No missing values found - data is complete!")
+        
+        # Outlier detection (simple IQR method)
+        print("\n4. Potential Outliers Detected:")
+        for col in numerical_cols:
+            Q1 = self.df[col].quantile(0.25)
+            Q3 = self.df[col].quantile(0.75)
+            IQR = Q3 - Q1
+            outliers = self.df[(self.df[col] < Q1 - 1.5 * IQR) | (self.df[col] > Q3 + 1.5 * IQR)]
+            if len(outliers) > 0:
+                print(f"   - {col}: {len(outliers)} potential outliers")
+
+
+# Example usage
+if __name__ == "__main__":
+    print("="*70)
+    print(" DATA ANALYSIS AND VISUALIZATION TOOL")
+    print("="*70)
+    
+    # Instructions for use
+    print("\nINSTRUCTIONS:")
+    print("1. Place your CSV file in the same directory as this script")
+    print("2. Update the csv_file variable below with your filename")
+    print("3. Update the column names to match your dataset")
+    print("\nNote: If you don't have a CSV file, you can create a sample dataset")
+    print("      or download one from Kaggle, UCI ML Repository, or other sources.")
+    
+    # Sample dataset creation (comment this out when using real data)
+    print("\n" + "-"*70)
+    print("Creating a sample dataset for demonstration...")
+    print("-"*70)
+    
+    # Create sample data
+    np.random.seed(42)
+    sample_data = {
+        'Product': ['A', 'B', 'C', 'D', 'E'] * 20,
+        'Sales': np.random.randint(100, 1000, 100),
+        'Revenue': np.random.randint(5000, 50000, 100),
+        'Rating': np.random.uniform(3.0, 5.0, 100),
+        'Customers': np.random.randint(10, 200, 100)
+    }
+    sample_df = pd.DataFrame(sample_data)
+    sample_df.to_csv('sample_sales_data.csv', index=False)
+    print("✓ Sample dataset created: sample_sales_data.csv")
+    
+    # Load and analyze data
+    print("\n" + "-"*70)
+    csv_file = 'sample_sales_data.csv'  # Change this to your CSV file
+    
+    try:
+        # Initialize analyzer
+        analyzer = DataAnalyzer(csv_file)
+        
+        # Perform basic statistics
+        analyzer.basic_statistics()
+        
+        # Calculate averages for specific columns
+        analyzer.calculate_column_average('Sales')
+        analyzer.calculate_column_average('Revenue')
+        
+        # Create visualizations
+        print("\n" + "-"*70)
+        print("Creating visualizations...")
+        print("-"*70)
+        
+        analyzer.create_bar_chart('Product', 'Product Distribution')
+        analyzer.create_scatter_plot('Sales', 'Revenue', 'Sales vs Revenue Analysis')
+        analyzer.create_heatmap('Feature Correlation Matrix')
+        
+        # Generate insights
+        analyzer.generate_insights()
+        
+        print("\n" + "="*70)
+        print("✓ Analysis Complete! Check the generated PNG files for visualizations.")
+        print("="*70)
+        
+    except FileNotFoundError:
+        print(f"\n❌ Error: File '{csv_file}' not found!")
+        print("Please ensure the CSV file exists in the current directory.")
+    except Exception as e:
+        print(f"\n❌ Error occurred: {str(e)}")
